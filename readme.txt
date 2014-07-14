@@ -73,6 +73,6 @@ Plugin will automatically detect:
 
 Now going through the points above, you should now see a new&nbsp;_Import users from CSV_&nbsp;menu item under Tool menu in the sidebar of the admin panel, see figure below of how it looks like.
 
-[Plugin link from dashboard](https://ps.w.org/import-users-from-csv-with-meta/assets/screenshot-1.jpg)
+[Plugin link from dashboard](http://ps.w.org/import-users-from-csv-with-meta/assets/screenshot-1.png)
 
 If you get any error after following through the steps above please contact us through item support comments so we can get back to you with possible helps in installing the plugin and more.
