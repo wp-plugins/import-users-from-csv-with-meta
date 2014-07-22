@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.0.0
+Version: 1.0.5
 Author URI: https://codection.com
 */
 
@@ -113,22 +113,22 @@ function acui_import_users($file, $role){?>
 						if(username_exists($username)):
 							echo '<script>alert("Username: ' . $username . ' already in use, we are going to skip");</script>';
 							continue;
-						endif;
+						else:
+							$user_id = wp_create_user($username, $password, $email);
+							wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+							
+							if($columns > 3)
+								for($i=3; $i<$columns; $i++)
+									update_user_meta($user_id, $headers[$i], $data[$i]);
 
-						$user_id = wp_create_user($username, $password, $email);
-						wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
-						
-						if($columns > 3)
-							for($i=3; $i<$columns; $i++)
-								update_user_meta($user_id, $headers[$i], $data[$i]);
+							echo "<tr><td>" . ($row - 1) . "</td>";
+							foreach ($data as $element)
+								echo "<td>$element</td>";
 
-						echo "<tr><td>" . ($row - 1) . "</td>";
-						foreach ($data as $element)
-							echo "<td>$element</td>";
+							echo "</tr>\n";
 
-						echo "</tr>\n";
-
-						flush();
+							flush();
+						endif;						
 					endif;
 
 					$row++;						
@@ -210,11 +210,11 @@ function acui_options()
 			</tr>
 			<tr valign="top">
 				<th scope="row">Example</th>
-			<td>Download this <a href="<?php echo plugins_url() . "/auto-csv-user-importer/test.csv"; ?>">.csv file</a> to test</td>
+			<td>Download this <a href="<?php echo plugins_url() . "/import-users-from-csv-with-meta/test.csv"; ?>">.csv file</a> to test</td> 
 			</tr>
 		</tbody></table>
 		<br/>
-		<div style="width:775px;margin:0 auto"><img src="<?php echo plugins_url() . "/auto-csv-user-importer/csv_example.png"; ?>"/></div>
+		<div style="width:775px;margin:0 auto"><img src="<?php echo plugins_url() . "/import-users-from-csv-with-meta/csv_example.png"; ?>"/></div>
 	</div>
 	<script type="text/javascript">
 	function check(){

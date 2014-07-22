@@ -52,6 +52,9 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.0.5 =
+*   Issue: Existing users role change, fixed
+
 = 1.0.0 =
 *   First release
 
