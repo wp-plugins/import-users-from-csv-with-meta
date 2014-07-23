@@ -52,6 +52,9 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.0.6 =
+*   Issue: Problems detecting extension solved (array('csv' => 'text/csv') added)
+
 = 1.0.5 =
 *   Issue: Existing users role change, fixed
 
