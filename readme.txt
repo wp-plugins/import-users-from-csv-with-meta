@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter
 Requires at least: 3.4
 Tested up to: 3.9.1
-Stable tag: 1.0.4
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.0.7 =
+*   Issue: admin/super_admin change role when file is too large. Two checks done to avoid it.
 
 = 1.0.6 =
 *   Issue: Problems detecting extension solved (array('csv' => 'text/csv') added)

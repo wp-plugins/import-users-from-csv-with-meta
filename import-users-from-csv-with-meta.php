@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.0.6
+Version: 1.0.7
 Author URI: https://codection.com
 */
 
@@ -76,7 +76,7 @@ function acui_import_users($file, $role){?>
 			ini_set('auto_detect_line_endings',TRUE);
 
 			$delimiter = acui_detect_delimiter($file);
-			
+
 			if (($manager = fopen($file, "r")) !== FALSE):
 				while (($data = fgetcsv($manager, 0, $delimiter)) !== FALSE):
 					for($i = 0; $i < count($data); $i++)
@@ -115,7 +115,14 @@ function acui_import_users($file, $role){?>
 							continue;
 						else:
 							$user_id = wp_create_user($username, $password, $email);
-							wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+
+							if(is_wp_error($user_id)){
+								echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
+								continue;
+							}
+
+							if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
+								wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
 							
 							if($columns > 3)
 								for($i=3; $i<$columns; $i++)
@@ -144,6 +151,18 @@ function acui_import_users($file, $role){?>
 		?>
 	</div>
 <?php
+}
+
+function acui_get_roles($user_id){
+	$roles = array();
+	$user = new WP_User( $user_id );
+
+	if ( !empty( $user->roles ) && is_array( $user->roles ) ) {
+		foreach ( $user->roles as $role )
+			$roles[] = $role;
+	}
+
+	return $roles;
 }
 
 function acui_options() 
