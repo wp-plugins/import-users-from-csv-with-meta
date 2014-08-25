@@ -52,6 +52,9 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.0.8 =
+*   The list of roles is generated reading all the roles avaible in the system, instead of being the default always.
+
 = 1.0.7 =
 *   Issue: admin/super_admin change role when file is too large. Two checks done to avoid it.
 

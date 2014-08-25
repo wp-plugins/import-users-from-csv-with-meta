@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.0.7
+Version: 1.0.8
 Author URI: https://codection.com
 */
 
@@ -165,6 +165,19 @@ function acui_get_roles($user_id){
 	return $roles;
 }
 
+function acui_get_editable_roles() {
+    global $wp_roles;
+
+    $all_roles = $wp_roles->roles;
+    $editable_roles = apply_filters('editable_roles', $all_roles);
+    $list_editable_roles = array();
+
+    foreach ($editable_roles as $key => $editable_role)
+		$list_editable_roles[$key] = $editable_role["name"];
+	
+    return $list_editable_roles;
+}
+
 function acui_options() 
 {
 	if (!current_user_can('edit_users'))  
@@ -187,11 +200,15 @@ function acui_options()
 				<th scope="row"><label for="role">Role</label></th>
 				<td>
 				<select name="role" id="role">
-					<option selected="selected" value="subscriber">Subscriber</option>
-					<option value="administrator">Administrator</option>
-					<option value="editor">Editor</option>
-					<option value="author">Author</option>
-					<option value="contributor">Contributor</option>			
+					<?php 
+						$list_roles = acui_get_editable_roles(); 
+						foreach ($list_roles as $key => $value) {
+							if($key == "subscriber")
+								echo "<option selected='selected' value='$key'>$value</option>";
+							else
+								echo "<option value='$key'>$value</option>";
+						}
+					?>
 				</select>
 				</td>
 			</tr>
