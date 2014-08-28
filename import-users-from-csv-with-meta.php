@@ -70,7 +70,8 @@ function acui_import_users($file, $role){?>
 			set_time_limit(0);
 			global $wpdb;
 			$headers = array();
-		
+			$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim");
+	
 			echo "<h3>Ready to registers</h3>";
 			echo "<p>First row represents the form of sheet</p>";
 			$row = 0;
@@ -127,8 +128,12 @@ function acui_import_users($file, $role){?>
 								wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
 							
 							if($columns > 3)
-								for($i=3; $i<$columns; $i++)
-									update_user_meta($user_id, $headers[$i], $data[$i]);
+								for($i=3; $i<$columns; $i++):
+									if(in_array($headers[$i], $wp_users_fields))
+										wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
+									else
+										update_user_meta($user_id, $headers[$i], $data[$i]);
+								endfor;
 
 							echo "<tr><td>" . ($row - 1) . "</td>";
 							foreach ($data as $element)
@@ -236,6 +241,23 @@ function acui_options()
 					</ol>						
 					<small><em>(The next columns are totally customizable and you can use whatever you want. All rows must contains same columns)</em></small>
 					<small><em>(User profile will be adapted to the kind of data you have selected)</em></small>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">WordPress default profile data</th>
+				<td>You can use those labels if you want to set data adapted to the WordPress default user columns (the ones who use the function <a href="http://codex.wordpress.org/Function_Reference/wp_update_user">wp_update_user</a>)
+					<ol>
+						<li><strong>user_nicename</strong>: A string that contains a URL-friendly name for the user. The default is the user's username.</li>
+						<li><strong>user_url</strong>: A string containing the user's URL for the user's web site.	</li>
+						<li><strong>display_name</strong>: A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user).	</li>
+						<li><strong>nickname</strong>: The user's nickname, defaults to the user's username.	</li>
+						<li><strong>first_name</strong>: The user's first name.</li>
+						<li><strong>last_name</strong>: The user's last name.</li>
+						<li><strong>description</strong>: A string containing content about the user.</li>
+						<li><strong>jabber</strong>: User's Jabber account.</li>
+						<li><strong>aim</strong>: User's AOL IM account.</li>
+						<li><strong>yim</strong>: User's Yahoo IM account.</li>
+					</ol>
 				</td>
 			</tr>
 			<tr valign="top">

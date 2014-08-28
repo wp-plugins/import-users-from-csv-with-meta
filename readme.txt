@@ -52,6 +52,14 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.1.0 =
+*	WordPress user profile default info is now saved correctly, the new fields are: "user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim" and "yim"
+* 	New CSV example created.
+*	Documentation adapted to new functionality.
+
+= 1.0.9 =
+*   Bug with some UTF-8 strings, fixed.
+
 = 1.0.8 =
 *   The list of roles is generated reading all the roles avaible in the system, instead of being the default always.
 
