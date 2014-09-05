@@ -3,7 +3,7 @@ Contributors: hornero, carazo
 Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter
 Requires at least: 3.4
-Tested up to: 3.9.1
+Tested up to: 4.0.0
 Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
