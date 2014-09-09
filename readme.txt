@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter
 Requires at least: 3.4
 Tested up to: 4.0.0
-Stable tag: 1.0.7
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,10 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.1.1 =
+*	Some bugs found and solved managing custom columns after 1.1.0 upgrade.
+*	If you have problems/bugs about custom headers, you should deactivate the plugin and then activate it and upload a CSV file with the correct headers again in order to solve some problems.
 
 = 1.1.0 =
 *	WordPress user profile default info is now saved correctly, the new fields are: "user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim" and "yim"

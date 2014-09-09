@@ -4,11 +4,13 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.1.0
+Version: 1.1.1
 Author URI: https://codection.com
 */
 
 $url_plugin = WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__), "", plugin_basename(__FILE__));
+$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim");
+$wp_min_fields = array("Username", "Password", "Email");
 
 function acui_init(){
 	acui_activate();
@@ -70,7 +72,8 @@ function acui_import_users($file, $role){?>
 			set_time_limit(0);
 			global $wpdb;
 			$headers = array();
-			$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim");
+			global $wp_users_fields;
+			global $wp_min_fields;	
 	
 			echo "<h3>Ready to registers</h3>";
 			echo "<p>First row represents the form of sheet</p>";
@@ -96,7 +99,10 @@ function acui_import_users($file, $role){?>
 							$headers[] = $element;
 
 						$columns = count($data);
-						update_option("acui_columns", $headers);
+
+						$headers_filtered = array_diff($headers, $wp_users_fields);
+						$headers_filtered = array_diff($headers_filtered, $wp_min_fields);
+						update_option("acui_columns", $headers_filtered);
 						?>
 						<h3>Inserting data</h3>
 						<table>
@@ -227,6 +233,58 @@ function acui_options()
 		</table>
 		<input class="button-primary" type="submit" name="uploadfile" id="uploadfile_btn" value="Start importing"/>
 		</form>
+
+		<?php 
+		$headers = get_option("acui_columns"); 
+
+		if(is_array($headers) && !empty($headers)):
+		?>
+
+		<h3>Custom columns loaded</h3>
+		<table class="form-table">
+		<tbody>
+			<tr valign="top">
+				<th scope="row">Columns loaded in previous files</th>
+				<td><small><em>(if you load another CSV with different columns, the new ones will replace this list)</em></small>
+					<ol>
+						<?php foreach ($headers as $column): ?>
+							<li><?php echo $column; ?></li>
+						<?php endforeach; ?>						
+					</ol>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">WordPress default profile data</th>
+				<td>You can use those labels if you want to set data adapted to the WordPress default user columns (the ones who use the function <a href="http://codex.wordpress.org/Function_Reference/wp_update_user">wp_update_user</a>)
+					<ol>
+						<li><strong>user_nicename</strong>: A string that contains a URL-friendly name for the user. The default is the user's username.</li>
+						<li><strong>user_url</strong>: A string containing the user's URL for the user's web site.	</li>
+						<li><strong>display_name</strong>: A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user).	</li>
+						<li><strong>nickname</strong>: The user's nickname, defaults to the user's username.	</li>
+						<li><strong>first_name</strong>: The user's first name.</li>
+						<li><strong>last_name</strong>: The user's last name.</li>
+						<li><strong>description</strong>: A string containing content about the user.</li>
+						<li><strong>jabber</strong>: User's Jabber account.</li>
+						<li><strong>aim</strong>: User's AOL IM account.</li>
+						<li><strong>yim</strong>: User's Yahoo IM account.</li>
+					</ol>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Important notice</th>
+				<td>You can upload as many files as you want, but all must have the same columns. If you upload another file, the columns will change to the form of last file uploaded.</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Any question about it</th>
+			<td>Please contact: <a href="mailto:contacto@codection.com">contacto@codection.com</a>.</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Example</th>
+			<td>Download this <a href="<?php echo plugins_url() . "/import-users-from-csv-with-meta/test.csv"; ?>">.csv file</a> to test</td> 
+			</tr>
+		</tbody></table>
+
+		<?php endif; ?>
 
 		<h3>Doc</h3>
 		<table class="form-table">
@@ -368,22 +426,26 @@ function acui_fileupload_process($role) {
 }
 
 function acui_extra_user_profile_fields( $user ) {
+	global $wp_users_fields;
+	global $wp_min_fields;
+
 	$headers = get_option("acui_columns");
-	if(count($headers) > 3):
+	if(count($headers) > 0):
 ?>
 	<h3><?php _e("Extra profile information", "blank"); ?></h3>
 
 	<table class="form-table"><?php
 
-	for($i=3; $i<count($headers); $i++):
-	$column = $headers[$i];
+	foreach ($headers as $column):
+		if(in_array($column, $wp_min_fields) || in_array($column, $wp_users_fields))
+			continue;
 	?>
 		<tr>
 			<th><label for="<?php echo $column; ?>"><?php echo $column; ?></label></th>
 			<td><input type="text" name="<?php echo $column; ?>" id="<?php echo $column; ?>" value="<?php echo esc_attr(get_the_author_meta($column, $user->ID )); ?>" class="regular-text" /></td>
 		</tr>
 		<?php
-	endfor;
+	endforeach;
 	?>
 	</table><?php
 	endif;
@@ -391,9 +453,19 @@ function acui_extra_user_profile_fields( $user ) {
 
 function acui_save_extra_user_profile_fields( $user_id ){
 	if (!current_user_can('edit_user', $user_id)) { return false; }
-	
-	foreach ($headers as $column)
-		update_user_meta( $user_id, $column, $_POST[$column] );
+
+	global $wp_users_fields;
+	global $wp_min_fields;
+	$headers = get_option("acui_columns");
+
+	if(count($headers) > 0):
+		foreach ($headers as $column){
+			if(in_array($column, $wp_min_fields) || in_array($column, $wp_users_fields))
+				continue;
+
+			update_user_meta( $user_id, $column, $_POST[$column] );
+		}
+	endif;
 }
 	
 register_activation_hook(__FILE__,'acui_init'); 
