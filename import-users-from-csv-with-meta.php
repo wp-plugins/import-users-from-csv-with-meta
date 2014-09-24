@@ -4,7 +4,11 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
+<<<<<<< .mine
+Version: 1.1.2
+=======
 Version: 1.1.1
+>>>>>>> .r995879
 Author URI: https://codection.com
 */
 
@@ -59,8 +63,9 @@ function acui_string_conversion($string){
     |\xF0[\x90-\xBF][\x80-\xBF]{2}    # planes 1-3
     |[\xF1-\xF3][\x80-\xBF]{3}                  # planes 4-15
     |\xF4[\x80-\x8F][\x80-\xBF]{2}    # plane 16
-    )+%xs', $string))
+    )+%xs', $string)){
 		return utf8_encode($string);
+    }
 	else
 		return $string;
 }
@@ -84,9 +89,16 @@ function acui_import_users($file, $role){?>
 			$delimiter = acui_detect_delimiter($file);
 
 			if (($manager = fopen($file, "r")) !== FALSE):
-				while (($data = fgetcsv($manager, 0, $delimiter)) !== FALSE):
-					for($i = 0; $i < count($data); $i++)
+				while (($fdata = fgets($manager)) !== FALSE):
+				$data = explode($delimiter, $fdata);
+					
+					foreach ($data as $key => $value)   {
+						$data[$key] = trim($value);
+					}
+
+					for($i = 0; $i < count($data); $i++){
 						$data[$i] = acui_string_conversion($data[$i]);
+					}
 					
 					if($row == 0):
 						// check min columns username - password - email
