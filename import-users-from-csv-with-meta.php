@@ -119,8 +119,6 @@ function acui_import_users($file, $role){?>
 						<?php
 						$row++;
 					else:
-						var_dump($data);
-						var_dump($columns);
 						if(count($data) != $columns): // if number of columns is not the same that columns in header
 							echo '<script>alert("Row number: ' . $row . ' has no the same columns than header, we are going to skip");</script>';
 							continue;
