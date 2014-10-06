@@ -4,11 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-<<<<<<< .mine
-Version: 1.1.2
-=======
-Version: 1.1.1
->>>>>>> .r995879
+Version: 1.1.3
 Author URI: https://codection.com
 */
 
@@ -90,7 +86,8 @@ function acui_import_users($file, $role){?>
 
 			if (($manager = fopen($file, "r")) !== FALSE):
 				while (($fdata = fgets($manager)) !== FALSE):
-				$data = explode($delimiter, $fdata);
+					$data = str_getcsv ( $fdata , $delimiter);
+					$data = $data[0];
 					
 					foreach ($data as $key => $value)   {
 						$data[$key] = trim($value);
@@ -122,8 +119,10 @@ function acui_import_users($file, $role){?>
 						<?php
 						$row++;
 					else:
+						var_dump($data);
+						var_dump($columns);
 						if(count($data) != $columns): // if number of columns is not the same that columns in header
-							echo '<script>alert("Row number: ' . $row . ' has not the same columns than header, we are going to skip");</script>';
+							echo '<script>alert("Row number: ' . $row . ' has no the same columns than header, we are going to skip");</script>';
 							continue;
 						endif;
 
@@ -488,3 +487,61 @@ add_action("show_user_profile", "acui_extra_user_profile_fields");
 add_action("edit_user_profile", "acui_extra_user_profile_fields");
 add_action("personal_options_update", "acui_save_extra_user_profile_fields");
 add_action("edit_user_profile_update", "acui_save_extra_user_profile_fields");
+
+// misc
+if (!function_exists('str_getcsv')) { 
+    function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = '\\', $eol = '\n') { 
+        if (is_string($input) && !empty($input)) { 
+            $output = array(); 
+            $tmp    = preg_split("/".$eol."/",$input); 
+            if (is_array($tmp) && !empty($tmp)) { 
+                while (list($line_num, $line) = each($tmp)) { 
+                    if (preg_match("/".$escape.$enclosure."/",$line)) { 
+                        while ($strlen = strlen($line)) { 
+                            $pos_delimiter       = strpos($line,$delimiter); 
+                            $pos_enclosure_start = strpos($line,$enclosure); 
+                            if ( 
+                                is_int($pos_delimiter) && is_int($pos_enclosure_start) 
+                                && ($pos_enclosure_start < $pos_delimiter) 
+                                ) { 
+                                $enclosed_str = substr($line,1); 
+                                $pos_enclosure_end = strpos($enclosed_str,$enclosure); 
+                                $enclosed_str = substr($enclosed_str,0,$pos_enclosure_end); 
+                                $output[$line_num][] = $enclosed_str; 
+                                $offset = $pos_enclosure_end+3; 
+                            } else { 
+                                if (empty($pos_delimiter) && empty($pos_enclosure_start)) { 
+                                    $output[$line_num][] = substr($line,0); 
+                                    $offset = strlen($line); 
+                                } else { 
+                                    $output[$line_num][] = substr($line,0,$pos_delimiter); 
+                                    $offset = ( 
+                                                !empty($pos_enclosure_start) 
+                                                && ($pos_enclosure_start < $pos_delimiter) 
+                                                ) 
+                                                ?$pos_enclosure_start 
+                                                :$pos_delimiter+1; 
+                                } 
+                            } 
+                            $line = substr($line,$offset); 
+                        } 
+                    } else { 
+                        $line = preg_split("/".$delimiter."/",$line); 
+
+                        /* 
+                         * Validating against pesky extra line breaks creating false rows. 
+                         */ 
+                        if (is_array($line) && !empty($line[0])) { 
+                            $output[$line_num] = $line; 
+                        }  
+                    } 
+                } 
+                return $output; 
+            } else { 
+                return false; 
+            } 
+        } else { 
+            return false; 
+        } 
+    } 
+} 
