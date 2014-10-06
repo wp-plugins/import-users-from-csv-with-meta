@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.1.3
+Version: 1.1.4
 Author URI: https://codection.com
 */
 
@@ -87,7 +87,9 @@ function acui_import_users($file, $role){?>
 			if (($manager = fopen($file, "r")) !== FALSE):
 				while (($fdata = fgets($manager)) !== FALSE):
 					$data = str_getcsv ( $fdata , $delimiter);
-					$data = $data[0];
+
+					if(count($data) == 1)
+						$data = $data[0];
 					
 					foreach ($data as $key => $value)   {
 						$data[$key] = trim($value);
