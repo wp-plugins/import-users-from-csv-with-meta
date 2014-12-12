@@ -326,6 +326,7 @@ function acui_options()
 						<li><strong>jabber</strong>: User's Jabber account.</li>
 						<li><strong>aim</strong>: User's AOL IM account.</li>
 						<li><strong>yim</strong>: User's Yahoo IM account.</li>
+						<li><strong>user_registered</strong>: Using the WordPress format for this kind of data Y-m-d H:i:s.</li>
 					</ol>
 				</td>
 			</tr>
