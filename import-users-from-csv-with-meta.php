@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.1.6
+Version: 1.1.7
 Author URI: https://codection.com
 */
 
@@ -84,94 +84,98 @@ function acui_import_users($file, $role){?>
 
 			$delimiter = acui_detect_delimiter($file);
 
-			if (($manager = fopen($file, "r")) !== FALSE):
-				while (($fdata = fgets($manager)) !== FALSE):
-					$data = str_getcsv ( $fdata , $delimiter);
+			//if (($manager = fopen($file, "r")) !== FALSE):
+			//	while (($fdata = fgets($manager)) !== FALSE):
+			//		$data = str_getcsv ( $fdata , $delimiter);
 
-					if(count($data) == 1)
-						$data = $data[0];
-					
-					foreach ($data as $key => $value)   {
-						$data[$key] = trim($value);
+			$manager = new SplFileObject($file);
+			while ( $data = $manager->fgetcsv($delimiter) ):
+				if( empty($data[0]) )
+					continue;
+
+				if( count($data) == 1 )
+					$data = $data[0];
+				
+				foreach ($data as $key => $value)   {
+					$data[$key] = trim($value);
+				}
+
+				for($i = 0; $i < count($data); $i++){
+					$data[$i] = acui_string_conversion($data[$i]);
+				}
+				
+				if($row == 0):
+					// check min columns username - password - email
+					if(count($data) < 3){
+						echo "<div id='message' class='error'>File must contain at least 3 columns: username, password and email</div>";
+						break;
 					}
 
-					for($i = 0; $i < count($data); $i++){
-						$data[$i] = acui_string_conversion($data[$i]);
-					}
-					
-					if($row == 0):
-						// check min columns username - password - email
-						if(count($data) < 3){
-							echo "<div id='message' class='error'>File must contain at least 3 columns: username, password and email</div>";
-							break;
-						}
+					foreach($data as $element)
+						$headers[] = $element;
 
-						foreach($data as $element)
-							$headers[] = $element;
+					$columns = count($data);
 
-						$columns = count($data);
-
-						$headers_filtered = array_diff($headers, $wp_users_fields);
-						$headers_filtered = array_diff($headers_filtered, $wp_min_fields);
-						update_option("acui_columns", $headers_filtered);
-						?>
-						<h3>Inserting data</h3>
-						<table>
-							<tr><th>Row</th><?php foreach($headers as $element) echo "<th>" . $element . "</th>"; ?></tr>
-						<?php
-						$row++;
-					else:
-						if(count($data) != $columns): // if number of columns is not the same that columns in header
-							echo '<script>alert("Row number: ' . $row . ' has no the same columns than header, we are going to skip");</script>';
-							continue;
-						endif;
-
-						$username = $data[0];
-						$password = $data[1];
-						$email = $data[2];
-
-						if(username_exists($username)):
-							echo '<script>alert("Username: ' . $username . ' already in use, we are going to skip");</script>';
-							continue;
-						else:
-							$user_id = wp_create_user($username, $password, $email);
-
-							if(is_wp_error($user_id)){
-								echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
-								continue;
-							}
-
-							if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
-								wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
-							
-							if($columns > 3)
-								for($i=3; $i<$columns; $i++):
-									if(in_array($headers[$i], $wp_users_fields))
-										wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
-									else
-										update_user_meta($user_id, $headers[$i], $data[$i]);
-								endfor;
-
-							echo "<tr><td>" . ($row - 1) . "</td>";
-							foreach ($data as $element)
-								echo "<td>$element</td>";
-
-							echo "</tr>\n";
-
-							flush();
-						endif;						
+					$headers_filtered = array_diff($headers, $wp_users_fields);
+					$headers_filtered = array_diff($headers_filtered, $wp_min_fields);
+					update_option("acui_columns", $headers_filtered);
+					?>
+					<h3>Inserting data</h3>
+					<table>
+						<tr><th>Row</th><?php foreach($headers as $element) echo "<th>" . $element . "</th>"; ?></tr>
+					<?php
+					$row++;
+				else:
+					if(count($data) != $columns): // if number of columns is not the same that columns in header
+						echo '<script>alert("Row number: ' . $row . ' has no the same columns than header, we are going to skip");</script>';
+						continue;
 					endif;
 
-					$row++;						
-				endwhile;
-				?>
-				</table>
-				<br/>
-				<p>Process finished you can go <a href="<?php echo get_admin_url() . '/users.php'; ?>">here to see results</a></p>
-				<?php
-				fclose($manager);
-				ini_set('auto_detect_line_endings',FALSE);
-			endif;
+					$username = $data[0];
+					$password = $data[1];
+					$email = $data[2];
+
+					if(username_exists($username)):
+						echo '<script>alert("Username: ' . $username . ' already in use, we are going to skip");</script>';
+						continue;
+					else:
+						$user_id = wp_create_user($username, $password, $email);
+
+						if(is_wp_error($user_id)){
+							echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
+							continue;
+						}
+
+						if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
+							wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+						
+						if($columns > 3)
+							for($i=3; $i<$columns; $i++):
+								if(in_array($headers[$i], $wp_users_fields))
+									wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
+								else
+									update_user_meta($user_id, $headers[$i], $data[$i]);
+							endfor;
+
+						echo "<tr><td>" . ($row - 1) . "</td>";
+						foreach ($data as $element)
+							echo "<td>$element</td>";
+
+						echo "</tr>\n";
+
+						flush();
+					endif;						
+				endif;
+
+				$row++;						
+			endwhile;
+			?>
+			</table>
+			<br/>
+			<p>Process finished you can go <a href="<?php echo get_admin_url() . '/users.php'; ?>">here to see results</a></p>
+			<?php
+			//fclose($manager);
+			ini_set('auto_detect_line_endings',FALSE);
 		?>
 	</div>
 <?php
