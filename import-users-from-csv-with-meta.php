@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.1.7
+Version: 1.1.8
 Author URI: https://codection.com
 */
 
@@ -220,34 +220,51 @@ function acui_options()
 ?>
 	<div class="wrap">
 		<div id='message' class='updated'>File must contain at least <strong>3 columns: username, password and email</strong>. These should be the first three columns and it should be placed <strong>in this order: username, password and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
-		<h2>Import users from CSV</h2>
-		<form method="POST" enctype="multipart/form-data" action="" accept-charset="utf-8" onsubmit="return check();">
-		<table class="form-table" style="width:50%">
-			<tbody>
-			<tr class="form-field">
-				<th scope="row"><label for="role">Role</label></th>
-				<td>
-				<select name="role" id="role">
-					<?php 
-						$list_roles = acui_get_editable_roles(); 
-						foreach ($list_roles as $key => $value) {
-							if($key == "subscriber")
-								echo "<option selected='selected' value='$key'>$value</option>";
-							else
-								echo "<option value='$key'>$value</option>";
-						}
-					?>
-				</select>
-				</td>
-			</tr>
-			<tr class="form-field form-required">
-				<th scope="row"><label for="user_login">CSV file <span class="description">(required)</span></label></th>
-				<td><input type="file" name="uploadfiles[]" id="uploadfiles" size="35" class="uploadfiles" /></td>
-			</tr>
-			</tbody>
-		</table>
-		<input class="button-primary" type="submit" name="uploadfile" id="uploadfile_btn" value="Start importing"/>
-		</form>
+		<div style="clear:both; width:100%;">
+			<h2>Import users from CSV</h2>
+		</div>
+
+		<div style="float:right; width:20%;">
+			<p><em>If you like this plugin, you can support it.</em></p>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="T5J5F6XZTSYH2">
+				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
+			</form>
+		</div>
+
+		<div style="float:left; width:80%;">
+			<form method="POST" enctype="multipart/form-data" action="" accept-charset="utf-8" onsubmit="return check();">
+			<table class="form-table" style="width:50%">
+				<tbody>
+				<tr class="form-field">
+					<th scope="row"><label for="role">Role</label></th>
+					<td>
+					<select name="role" id="role">
+						<?php 
+							$list_roles = acui_get_editable_roles(); 
+							foreach ($list_roles as $key => $value) {
+								if($key == "subscriber")
+									echo "<option selected='selected' value='$key'>$value</option>";
+								else
+									echo "<option value='$key'>$value</option>";
+							}
+						?>
+					</select>
+					</td>
+				</tr>
+				<tr class="form-field form-required">
+					<th scope="row"><label for="user_login">CSV file <span class="description">(required)</span></label></th>
+					<td><input type="file" name="uploadfiles[]" id="uploadfiles" size="35" class="uploadfiles" /></td>
+				</tr>
+				</tbody>
+			</table>
+			<input class="button-primary" type="submit" name="uploadfile" id="uploadfile_btn" value="Start importing"/>
+			</form>
+		</div>
+
+		<div style="clear:both; width:100%;"></div>
 
 		<?php 
 		$headers = get_option("acui_columns"); 
