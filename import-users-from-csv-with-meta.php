@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.1.8
+Version: 1.2
 Author URI: https://codection.com
 */
 
@@ -84,10 +84,6 @@ function acui_import_users($file, $role){?>
 
 			$delimiter = acui_detect_delimiter($file);
 
-			//if (($manager = fopen($file, "r")) !== FALSE):
-			//	while (($fdata = fgets($manager)) !== FALSE):
-			//		$data = str_getcsv ( $fdata , $delimiter);
-
 			$manager = new SplFileObject($file);
 			while ( $data = $manager->fgetcsv($delimiter) ):
 				if( empty($data[0]) )
@@ -120,7 +116,7 @@ function acui_import_users($file, $role){?>
 					$headers_filtered = array_diff($headers_filtered, $wp_min_fields);
 					update_option("acui_columns", $headers_filtered);
 					?>
-					<h3>Inserting data</h3>
+					<h3>Inserting and updating data</h3>
 					<table>
 						<tr><th>Row</th><?php foreach($headers as $element) echo "<th>" . $element . "</th>"; ?></tr>
 					<?php
@@ -134,37 +130,42 @@ function acui_import_users($file, $role){?>
 					$username = $data[0];
 					$password = $data[1];
 					$email = $data[2];
+					$user_id = 0;
 
-					if(username_exists($username)):
-						echo '<script>alert("Username: ' . $username . ' already in use, we are going to skip");</script>';
-						continue;
-					else:
+					if(username_exists($username)){
+						$user_object = get_user_by( "login", $username );
+						$user_id = $user_object->ID;
+					}
+					else{
 						$user_id = wp_create_user($username, $password, $email);
-
-						if(is_wp_error($user_id)){
-							echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
-							continue;
-						}
-
-						if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
-							wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+					}
 						
-						if($columns > 3)
-							for($i=3; $i<$columns; $i++):
+					if(is_wp_error($user_id)){
+						echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
+						continue;
+					}
+
+					if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
+						wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+						
+					if($columns > 3){
+						for($i=3; $i<$columns; $i++):
+							if( !empty($data) ){
 								if(in_array($headers[$i], $wp_users_fields))
 									wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
 								else
 									update_user_meta($user_id, $headers[$i], $data[$i]);
-							endfor;
+							}
+						endfor;
+					}
 
-						echo "<tr><td>" . ($row - 1) . "</td>";
-						foreach ($data as $element)
-							echo "<td>$element</td>";
+					echo "<tr><td>" . ($row - 1) . "</td>";
+					foreach ($data as $element)
+						echo "<td>$element</td>";
 
-						echo "</tr>\n";
+					echo "</tr>\n";
 
-						flush();
-					endif;						
+					flush();
 				endif;
 
 				$row++;						
@@ -303,8 +304,9 @@ function acui_options()
 				</td>
 			</tr>
 			<tr valign="top">
-				<th scope="row">Important notice</th>
-				<td>You can upload as many files as you want, but all must have the same columns. If you upload another file, the columns will change to the form of last file uploaded.</td>
+				<th scope="row">Important notices</th>
+				<td>1) You can upload as many files as you want, but all must have the same columns. If you upload another file, the columns will change to the form of last file uploaded.</td>
+				<td>2) If you are updating data, leave empty any field to leave it without update. If you want to update it leaving it blank, you can always insert a blank space in this field.</td>
 			</tr>
 			<tr valign="top">
 				<th scope="row">Any question about it</th>

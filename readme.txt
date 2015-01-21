@@ -1,10 +1,10 @@
 === Import users from CSV with meta ===
 Contributors: hornero, carazo
 Donate link: http://codection.com
-Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter
+Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.1.0
-Stable tag: 1.1.8
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.2 =
+*	From this version, plugin can both insert new users and update new ones. Thanks to Nick Gallop from Weston Graphics.
 
 = 1.1.8 =
 *	Donation button added.
