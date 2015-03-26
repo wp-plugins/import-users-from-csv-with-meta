@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.1.0
-Stable tag: 1.2
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,6 +52,9 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.2.1 =
+*	Thanks to Graham May we have fixed a problem when meta keys have a blank space and also we have improved plugin security using filter_input() and filter_input_array() functions instead of $_POSTs
+
 = 1.2 =
 *	From this version, plugin can both insert new users and update new ones. Thanks to Nick Gallop from Weston Graphics.
 
@@ -61,6 +64,17 @@ Plugin will automatically detect:
 = 1.1.7 =
 *	Fixed problems with \n, \r and \n\r inside CSV fields. Thanks to Ted Stresen-Reuter for his help. We have changed our way to parse CSV files, now we use SplFileObject and we can solve this problem.
 
+=======
+= 1.2 =
+*	From this version, plugin can both insert new users and update new ones. Thanks to Nick Gallop from Weston Graphics.
+
+= 1.1.8 =
+*	Donation button added.
+
+= 1.1.7 =
+*	Fixed problems with \n, \r and \n\r inside CSV fields. Thanks to Ted Stresen-Reuter for his help. We have changed our way to parse CSV files, now we use SplFileObject and we can solve this problem.
+
+>>>>>>> .r1121403
 = 1.1.6 =
 *	You can import now user_registered but always in the correct format Y-m-d H:i:s
 

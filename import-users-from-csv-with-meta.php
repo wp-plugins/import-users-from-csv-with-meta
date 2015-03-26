@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.2
+Version: 1.2.1
 Author URI: https://codection.com
 */
 
@@ -209,13 +209,15 @@ function acui_get_editable_roles() {
 
 function acui_options() 
 {
+	$post_filtered = filter_input_array( INPUT_POST );
+
 	if (!current_user_can('edit_users'))  
 	{
 		wp_die(__('You are not allowed to see this content.'));
 		$acui_action_url = admin_url('options-general.php?page=' . plugin_basename(__FILE__));
 	}
-	else if(isset($_POST['uploadfile']))
-		acui_fileupload_process($_POST['role']);
+	else if(isset($post_filtered['uploadfile']))
+		acui_fileupload_process($post_filtered['role']);
 	else
 	{
 ?>
@@ -493,12 +495,16 @@ function acui_save_extra_user_profile_fields( $user_id ){
 	global $wp_min_fields;
 	$headers = get_option("acui_columns");
 
+	$post_filtered = filter_input_array( INPUT_POST );
+
 	if(count($headers) > 0):
 		foreach ($headers as $column){
 			if(in_array($column, $wp_min_fields) || in_array($column, $wp_users_fields))
 				continue;
 
-			update_user_meta( $user_id, $column, $_POST[$column] );
+
+			$column_sanitized = str_replace(" ", "_", $column);
+			update_user_meta( $user_id, $column, $post_filtered[$column_sanitized] );
 		}
 	endif;
 }
