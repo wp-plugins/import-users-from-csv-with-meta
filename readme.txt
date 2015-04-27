@@ -3,8 +3,8 @@ Contributors: hornero, carazo
 Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
-Tested up to: 4.1.0
-Stable tag: 1.2.2
+Tested up to: 4.2.0
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.2.3 =
+*	Extra format check done at the start of each row.
 
 = 1.2.2 =
 *	Thanks to twmoore3rd we have created a system to detect email collisions, username collision are not detected because plugin update metadata in this case
