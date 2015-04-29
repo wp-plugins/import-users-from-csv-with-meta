@@ -591,7 +591,7 @@ if (!function_exists('str_getcsv')) {
                                 $offset = $pos_enclosure_end+3; 
                             } else { 
                                 if (empty($pos_delimiter) && empty($pos_enclosure_start)) { 
-                                    $output[$line_num][] = substr($e,0); 
+                                    $output[$line_num][] = substr($line,0); 
                                     $offset = strlen($line); 
                                 } else { 
                                     $output[$line_num][] = substr($line,0,$pos_delimiter); 
