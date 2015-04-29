@@ -4,13 +4,13 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.2.3
+Version: 1.3
 Author URI: https://codection.com
 */
 
 $url_plugin = WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__), "", plugin_basename(__FILE__));
-$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim", "user_registered");
-$wp_min_fields = array("Username", "Password", "Email");
+$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim", "user_registered", "Password");
+$wp_min_fields = array("Username", "Email");
 
 function acui_init(){
 	acui_activate();
@@ -66,13 +66,14 @@ function acui_string_conversion($string){
 		return $string;
 }
 
-function acui_import_users($file, $role){?>
+function acui_import_users($file, $form_data){?>
 	<div class="wrap">
 		<h2>Importing users</h2>	
 		<?php
 			set_time_limit(0);
 			global $wpdb;
 			$headers = array();
+			$role = $form_data["role"];
 			global $wp_users_fields;
 			global $wp_min_fields;	
 	
@@ -91,13 +92,8 @@ function acui_import_users($file, $role){?>
 
 				if( count($data) == 1 )
 					$data = $data[0];
-
-				if( !is_array($data) ){
-					echo "<div id='message' class='error'>There are problems reading the file. Please review the format.</div>";
-					continue;
-				}
 				
-				foreach ($data as $key => $value){
+				foreach ($data as $key => $value)   {
 					$data[$key] = trim($value);
 				}
 
@@ -106,10 +102,21 @@ function acui_import_users($file, $role){?>
 				}
 				
 				if($row == 0):
-					// check min columns username - password - email
-					if(count($data) < 3){
-						echo "<div id='message' class='error'>File must contain at least 3 columns: username, password and email</div>";
+					// check min columns username - email
+					if(count($data) < 2){
+						echo "<div id='message' class='error'>File must contain at least 2 columns: username and email</div>";
 						break;
+					}
+
+					$i = 0;
+					$password_position = false;
+					foreach($data as $element){
+						$headers[] = $element;
+
+						if(strtolower($element) == "password")
+							$password_position = $i;
+
+						$i++;
 					}
 
 					foreach($data as $element)
@@ -133,24 +140,29 @@ function acui_import_users($file, $role){?>
 					endif;
 
 					$username = $data[0];
-					$password = $data[1];
-					$email = $data[2];
+					$email = $data[1];
 					$user_id = 0;
 
-					if( email_exists( $email ) && !username_exists( $username ) ) {
-						echo '<script>alert("Problems with email: ' . $email . ', the email exists but it does not belong to any user, we are going to skip");</script>';
-						continue;
-					}
+					if($password_position === false)
+						$password = wp_generate_password();
+					else
+						$password = $data[$password_position];
 
-					if( username_exists( $username ) ){
+					if(username_exists($username)){
 						$user_object = get_user_by( "login", $username );
 						$user_id = $user_object->ID;
+
+						if( !empty($password) )
+							wp_set_password( $password, $user_id );
 					}
 					else{
+						if( empty($password) ) // if user not exist and password is empty but the column is set, it will be generated
+							$password = wp_generate_password();
+
 						$user_id = wp_create_user($username, $password, $email);
 					}
 						
-					if(is_wp_error($user_id)){
+					if( is_wp_error($user_id) ){
 						echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
 						continue;
 					}
@@ -161,7 +173,9 @@ function acui_import_users($file, $role){?>
 					if($columns > 3){
 						for($i=3; $i<$columns; $i++):
 							if( !empty($data) ){
-								if(in_array($headers[$i], $wp_users_fields))
+								if(strtolower($headers[$i]) == "password")
+									continue;
+								elseif(in_array($headers[$i], $wp_users_fields))
 									wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
 								else
 									update_user_meta($user_id, $headers[$i], $data[$i]);
@@ -176,6 +190,21 @@ function acui_import_users($file, $role){?>
 					echo "</tr>\n";
 
 					flush();
+
+					// send mail
+					if($form_data["sends_email"]):
+						$body_mail = stripslashes($form_data["custom_message"]);
+						$subject = stripslashes($form_data["mail_title"]);
+						
+						$body_mail = str_replace("**loginurl**", "<a href='" . home_url() . "/wp-login.php" . "'>" . home_url() . "/wp-login.php" . "</a>", $body_mail);
+						$body_mail = str_replace("**username**", $username, $body_mail);
+						$body_mail = str_replace("**password**", $password, $body_mail);
+
+						add_filter( 'wp_mail_content_type', 'set_html_content_type' );
+						wp_mail( $email, $subject, $body_mail );
+						remove_filter( 'wp_mail_content_type', 'set_html_content_type' );
+					endif;
+
 				endif;
 
 				$row++;						
@@ -219,37 +248,42 @@ function acui_get_editable_roles() {
 
 function acui_options() 
 {
-	$post_filtered = filter_input_array( INPUT_POST );
-
 	if (!current_user_can('edit_users'))  
 	{
 		wp_die(__('You are not allowed to see this content.'));
 		$acui_action_url = admin_url('options-general.php?page=' . plugin_basename(__FILE__));
 	}
-	else if(isset($post_filtered['uploadfile']))
-		acui_fileupload_process($post_filtered['role']);
+	else if(isset($_POST['uploadfile']))
+		acui_fileupload_process($_POST);
 	else
 	{
 ?>
 	<div class="wrap">
-		<div id='message' class='updated'>File must contain at least <strong>3 columns: username, password and email</strong>. These should be the first three columns and it should be placed <strong>in this order: username, password and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
-		<div style="clear:both; width:100%;">
+		<div id='message' class='updated'>File must contain at least <strong>2 columns: username and email</strong>. These should be the first two columns and it should be placed <strong>in this order: username and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
+		<div id='message-password' class='error'>Please, read carrefully how <strong>passwords are managed</strong>.</div>
+		<div style="float:left; width:80%;">
 			<h2>Import users from CSV</h2>
 		</div>
 
 		<div style="float:right; width:20%;">
-			<p><em>If you like this plugin, you can support it.</em></p>
-			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-				<input type="hidden" name="cmd" value="_s-xclick">
-				<input type="hidden" name="hosted_button_id" value="T5J5F6XZTSYH2">
-				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-				<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
-			</form>
+			<div style="margin:0 5px; padding: 2px; background:white;">
+				<p><em>If you like this plugin, you can support it.</em></p>
+				<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+					<input type="hidden" name="cmd" value="_s-xclick">
+					<input type="hidden" name="hosted_button_id" value="T5J5F6XZTSYH2">
+					<div style="width:102px; margin:0 auto;">
+						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+						<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
+					</div>
+				</form>
+			</div>
 		</div>
 
-		<div style="float:left; width:80%;">
+		<div style="clear:both;"></div>
+
+		<div style="width:100%;">
 			<form method="POST" enctype="multipart/form-data" action="" accept-charset="utf-8" onsubmit="return check();">
-			<table class="form-table" style="width:50%">
+			<table class="form-table">
 				<tbody>
 				<tr class="form-field">
 					<th scope="row"><label for="role">Role</label></th>
@@ -270,6 +304,17 @@ function acui_options()
 				<tr class="form-field form-required">
 					<th scope="row"><label for="user_login">CSV file <span class="description">(required)</span></label></th>
 					<td><input type="file" name="uploadfiles[]" id="uploadfiles" size="35" class="uploadfiles" /></td>
+				</tr>
+				<tr class="form-field">
+					<th scope="row"><label for="user_login">Send mail</label></th>
+					<td>
+						<p>Do you wish to send a mail with credentials to news users? <input type="checkbox" name="sends_email" value = "yes" onclick="showMe('email_div')"></p>
+						<div id="email_div" style="display:none">
+						<p>Mail subject : <input name="mail_title" size="100" value="Welcome to <?php echo get_bloginfo("name"); ?>" id="title" autocomplete="off" type="text"></p>
+						<?php wp_editor("Welcome,<br/>Your data to login in this site is:<br/><ul><li>URL to login: **loginurl**</li><li>Username = **username**</li><li>Password = **password**</li></ul>", 'custom_message'); ?>
+						**username** = username to login - **password** = user password - **loginurl** = current site login url, for example www.site.com/wp-login.php
+						</div>
+					</td>
 				</tr>
 				</tbody>
 			</table>
@@ -298,36 +343,6 @@ function acui_options()
 					</ol>
 				</td>
 			</tr>
-			<tr valign="top">
-				<th scope="row">WordPress default profile data</th>
-				<td>You can use those labels if you want to set data adapted to the WordPress default user columns (the ones who use the function <a href="http://codex.wordpress.org/Function_Reference/wp_update_user">wp_update_user</a>)
-					<ol>
-						<li><strong>user_nicename</strong>: A string that contains a URL-friendly name for the user. The default is the user's username.</li>
-						<li><strong>user_url</strong>: A string containing the user's URL for the user's web site.	</li>
-						<li><strong>display_name</strong>: A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user).	</li>
-						<li><strong>nickname</strong>: The user's nickname, defaults to the user's username.	</li>
-						<li><strong>first_name</strong>: The user's first name.</li>
-						<li><strong>last_name</strong>: The user's last name.</li>
-						<li><strong>description</strong>: A string containing content about the user.</li>
-						<li><strong>jabber</strong>: User's Jabber account.</li>
-						<li><strong>aim</strong>: User's AOL IM account.</li>
-						<li><strong>yim</strong>: User's Yahoo IM account.</li>
-					</ol>
-				</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row">Important notices</th>
-				<td>1) You can upload as many files as you want, but all must have the same columns. If you upload another file, the columns will change to the form of last file uploaded.</td>
-				<td>2) If you are updating data, leave empty any field to leave it without update. If you want to update it leaving it blank, you can always insert a blank space in this field.</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row">Any question about it</th>
-			<td>Please contact: <a href="mailto:contacto@codection.com">contacto@codection.com</a>.</td>
-			</tr>
-			<tr valign="top">
-				<th scope="row">Example</th>
-			<td>Download this <a href="<?php echo plugins_url() . "/import-users-from-csv-with-meta/test.csv"; ?>">.csv file</a> to test</td> 
-			</tr>
 		</tbody></table>
 
 		<?php endif; ?>
@@ -337,14 +352,26 @@ function acui_options()
 		<tbody>
 			<tr valign="top">
 				<th scope="row">Columns position</th>
-				<td><small><em>(Documents should look like the one presented into screenshot. Remember you should fill the first three rows with the next values)</em></small>
+				<td><small><em>(Documents should look like the one presented into screenshot. Remember you should fill the first two columns with the next values)</em></small>
 					<ol>
 						<li>Username</li>
-						<li>Password</li>
 						<li>Email</li>
 					</ol>						
 					<small><em>(The next columns are totally customizable and you can use whatever you want. All rows must contains same columns)</em></small>
 					<small><em>(User profile will be adapted to the kind of data you have selected)</em></small>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row">Passwords</th>
+				<td>A string that contains user passwords. We have different options for this case:
+					<ul style="list-style:disc outside none; margin-left:2em;">
+						<li>If user is created: if you set a value for the password, it will be used; if not, it will be generated</li>
+						<li>If user is updated: 
+							<ul style="list-style:disc outside none;margin-left:2em;">
+								<li>If you <strong>don't create a column for passwords</strong>: passwords will be generated automatically</li>
+								<li>If you <strong>create a column for passwords</strong>: if cell is empty, password won't be updated; if cell has a value, it will be used</li>
+							</ul>
+					</ul>
 				</td>
 			</tr>
 			<tr valign="top">
@@ -388,6 +415,18 @@ function acui_options()
 		   return false;
 		}
 	}
+
+	function showMe (box) {
+	    var chboxs = document.getElementsByName("sends_email");
+	    var vis = "none";
+	    for(var i=0;i<chboxs.length;i++) { 
+	        if(chboxs[i].checked){
+	         vis = "block";
+	            break;
+	        }
+	    }
+	    document.getElementById(box).style.display = vis;
+	}
 	</script>
 <?php
 	}
@@ -401,8 +440,9 @@ function acui_options()
  *
  * @return none
  */
-function acui_fileupload_process($role) {
+function acui_fileupload_process($form_data) {
   $uploadfiles = $_FILES['uploadfiles'];
+  $role = $form_data["role"]; 
 
   if (is_array($uploadfiles)) {
 
@@ -466,7 +506,7 @@ function acui_fileupload_process($role) {
 		$attach_data = wp_generate_attachment_metadata( $attach_id, $filedest );
 		wp_update_attachment_metadata( $attach_id,  $attach_data );
 		
-		acui_import_users($filedest, $role);
+		acui_import_users($filedest, $form_data);
 	  }
 	}
   }
@@ -551,7 +591,7 @@ if (!function_exists('str_getcsv')) {
                                 $offset = $pos_enclosure_end+3; 
                             } else { 
                                 if (empty($pos_delimiter) && empty($pos_enclosure_start)) { 
-                                    $output[$line_num][] = substr($line,0); 
+                                    $output[$line_num][] = substr($e,0); 
                                     $offset = strlen($line); 
                                 } else { 
                                     $output[$line_num][] = substr($line,0,$pos_delimiter); 
@@ -585,3 +625,9 @@ if (!function_exists('str_getcsv')) {
         } 
     } 
 } 
+
+if (!function_exists('set_html_content_type')) { 
+	function set_html_content_type() {
+		return 'text/html';
+	}
+}
