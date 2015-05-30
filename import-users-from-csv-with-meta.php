@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.3
+Version: 1.3.4
 Author URI: https://codection.com
 */
 
@@ -192,7 +192,7 @@ function acui_import_users($file, $form_data){?>
 					flush();
 
 					// send mail
-					if($form_data["sends_email"]):
+					if( isset($form_data["sends_email"]) && $form_data["sends_email"] ):
 						$body_mail = stripslashes($form_data["custom_message"]);
 						$subject = stripslashes($form_data["mail_title"]);
 						
@@ -248,6 +248,8 @@ function acui_get_editable_roles() {
 
 function acui_options() 
 {
+	global $url_plugin;
+
 	if (!current_user_can('edit_users'))  
 	{
 		wp_die(__('You are not allowed to see this content.'));
@@ -258,25 +260,39 @@ function acui_options()
 	else
 	{
 ?>
-	<div class="wrap">
+	<script>	
+	jQuery(document).ready(function($) {
+		$('.postbox').children('h3, .handlediv').click(function(){ $(this).siblings('.inside').toggle();});
+	});
+	</script>
+
+	<div class="wrap">	
+
+		<div class="postbox">
+		    <div title="Click to open/close" class="handlediv">
+		      <br>
+		    </div>
+
+		    <h3 class="hndle"><span>&nbsp;Do you use it?</span></h3>
+
+		    <div class="inside" style="display: block;">
+		        <img src="<?php echo $url_plugin; ?>/icon_coffee.png" alt="buy me a coffee" style=" margin: 5px; float:left;">
+		        <p>Hi! we are <a href="https://twitter.com/fjcarazo" target="_blank" title="Javier Carazo">Javier Carazo</a> and <a href="https://twitter.com/ahornero" target="_blank" title="Alberto Hornero">Alberto Hornero</a>  from <a href="http://codection.com">Codection</a>, developers of this plugin.</p>
+		        <p>We have been spending many hours to develop this plugin. <br>If you like and use this plugin, you can <strong>buy us a cup of coffee</strong>.</p>
+		        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+					<input type="hidden" name="cmd" value="_s-xclick">
+					<input type="hidden" name="hosted_button_id" value="QPYVWKJG4HDGG">
+					<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online.">
+					<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
+				</form>
+		        <div style="clear:both;"></div>
+		    </div>
+		</div>
+	
 		<div id='message' class='updated'>File must contain at least <strong>2 columns: username and email</strong>. These should be the first two columns and it should be placed <strong>in this order: username and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
 		<div id='message-password' class='error'>Please, read carrefully how <strong>passwords are managed</strong>.</div>
 		<div style="float:left; width:80%;">
 			<h2>Import users from CSV</h2>
-		</div>
-
-		<div style="float:right; width:20%;">
-			<div style="margin:0 5px; padding: 2px; background:white;">
-				<p><em>If you like this plugin, you can support it.</em></p>
-				<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-					<input type="hidden" name="cmd" value="_s-xclick">
-					<input type="hidden" name="hosted_button_id" value="T5J5F6XZTSYH2">
-					<div style="width:102px; margin:0 auto;">
-						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-						<img alt="" border="0" src="https://www.paypalobjects.com/es_ES/i/scr/pixel.gif" width="1" height="1">
-					</div>
-				</form>
-			</div>
 		</div>
 
 		<div style="clear:both;"></div>
