@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.4
+Version: 1.3.5
 Author URI: https://codection.com
 */
 
@@ -273,10 +273,10 @@ function acui_options()
 		      <br>
 		    </div>
 
-		    <h3 class="hndle"><span>&nbsp;Do you use it?</span></h3>
+		    <h3 class="hndle"><span>&nbsp;Do you like it?</span></h3>
 
 		    <div class="inside" style="display: block;">
-		        <img src="<?php echo $url_plugin; ?>/icon_coffee.png" alt="buy me a coffee" style=" margin: 5px; float:left;">
+		        <img src="<?php echo $url_plugin; ?>icon_coffee.png" alt="buy me a coffee" style=" margin: 5px; float:left;">
 		        <p>Hi! we are <a href="https://twitter.com/fjcarazo" target="_blank" title="Javier Carazo">Javier Carazo</a> and <a href="https://twitter.com/ahornero" target="_blank" title="Alberto Hornero">Alberto Hornero</a>  from <a href="http://codection.com">Codection</a>, developers of this plugin.</p>
 		        <p>We have been spending many hours to develop this plugin. <br>If you like and use this plugin, you can <strong>buy us a cup of coffee</strong>.</p>
 		        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
