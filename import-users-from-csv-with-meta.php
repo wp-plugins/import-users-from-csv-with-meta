@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.5
+Version: 1.3.6
 Author URI: https://codection.com
 */
 
@@ -148,12 +148,21 @@ function acui_import_users($file, $form_data){?>
 					else
 						$password = $data[$password_position];
 
-					if(username_exists($username)){
+					if( username_exists($username) ){ // if user exists, we take his ID by login
 						$user_object = get_user_by( "login", $username );
 						$user_id = $user_object->ID;
 
 						if( !empty($password) )
 							wp_set_password( $password, $user_id );
+					}
+					elseif( email_exists( $email ) ){ // if the email is registered, we take the user from this
+	                    $user_object = get_user_by( "email", $email );
+	                    $user_id = $user_object->ID;
+	                    
+	                    $data[0] = $user_object->user_login . "<br/>(File: " . $username . ")";
+
+	                    if( !empty($password) )
+	                        wp_set_password( $password, $user_id );
 					}
 					else{
 						if( empty($password) ) // if user not exist and password is empty but the column is set, it will be generated
@@ -162,7 +171,7 @@ function acui_import_users($file, $form_data){?>
 						$user_id = wp_create_user($username, $password, $email);
 					}
 						
-					if( is_wp_error($user_id) ){
+					if( is_wp_error($user_id) ){ // in case the user is generating errors after this checks
 						echo '<script>alert("Problems with user: ' . $username . ', we are going to skip");</script>';
 						continue;
 					}
