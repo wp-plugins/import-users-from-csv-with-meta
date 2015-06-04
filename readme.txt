@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.2.2
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.3.7 =
+* 	After upload, CSV file is deleted in order to prevent security issues.
 
 = 1.3.6 =
 * 	Thanks to idealien for telling us that we should check also if user exist using email (in addition to user login). Now we do this double check to prevent problems with users that exists but was registered using another user login. In the table we show this difference, the login is not changed, but all the rest of data is updated.
