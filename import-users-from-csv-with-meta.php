@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.7
+Version: 1.3.8
 Author URI: https://codection.com
 */
 
@@ -146,7 +146,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 					if($password_position === false)
 						$password = wp_generate_password();
 					else
-						$password = $data[$password_position];
+						$password = $data[ $password_position ];
 
 					if( username_exists($username) ){ // if user exists, we take his ID by login
 						$user_object = get_user_by( "login", $username );
@@ -179,15 +179,15 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 					if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
 						wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
 						
-					if($columns > 3){
-						for($i=3; $i<$columns; $i++):
-							if( !empty($data) ){
-								if(strtolower($headers[$i]) == "password")
+					if($columns > 2){
+						for( $i=2 ; $i<$columns; $i++ ):
+							if( !empty( $data ) ){
+								if(strtolower( $headers[$i] ) == "password")
 									continue;
 								elseif(in_array($headers[$i], $wp_users_fields))
 									wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
 								else
-									update_user_meta($user_id, $headers[$i], $data[$i]);
+									update_user_meta( $user_id, $headers[$i], $data[$i] );
 							}
 						endfor;
 					}
