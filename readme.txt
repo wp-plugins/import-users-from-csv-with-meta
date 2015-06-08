@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.2.2
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,10 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.3.9 =
+* 	List of old CSV files created in order to prevent security problems.
+* 	Created a button to delete this files directly in the plugin, you can delete one by one or you can do a bulk delete.
 
 = 1.3.8 =
 * 	Fixed a problem with iterator in columns count. Thanks to alysko for their message: https://wordpress.org/support/topic/3rd-colums-ignored?replies=1

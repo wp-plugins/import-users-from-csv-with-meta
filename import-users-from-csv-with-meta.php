@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.8
+Version: 1.3.9
 Author URI: https://codection.com
 */
 
@@ -267,10 +267,14 @@ function acui_options()
 		wp_die(__('You are not allowed to see this content.'));
 		$acui_action_url = admin_url('options-general.php?page=' . plugin_basename(__FILE__));
 	}
-	else if(isset($_POST['uploadfile']))
+	else if( isset( $_POST['uploadfile'] ) ){
 		acui_fileupload_process($_POST);
+	}
 	else
 	{
+		
+	$args_old_csv = array( 'post_type'=> 'attachment', 'post_mime_type' => 'text/csv', 'post_status' => 'inherit', 'posts_per_page' => -1 );
+	$old_csv_files = new WP_Query( $args_old_csv );
 ?>
 	<script>	
 	jQuery(document).ready(function($) {
@@ -300,7 +304,36 @@ function acui_options()
 		        <div style="clear:both;"></div>
 		    </div>
 		</div>
-	
+
+		<?php if( $old_csv_files->found_posts > 0 ): ?>
+		<div class="postbox">
+		    <div title="Click to open/close" class="handlediv">
+		      <br>
+		    </div>
+
+		    <h3 class="hndle"><span>&nbsp;Old CSV files uploaded</span></h3>
+
+		    <div class="inside" style="display: block;">
+		    	<p>For security reasons you should delete this files, probably they would be visible in the Internet if a bot or someone discover the URL. You can delete each file or maybe you want delete all CSV files you have uploaded:</p>
+		    	<input type="button" value="Delete all CSV files uploaded" id="bulk_delete_attachment" style="float:right;"></input>
+		    	<ul>
+		    		<?php while($old_csv_files->have_posts()) : 
+		    			$old_csv_files->the_post(); 
+
+		    			if( get_the_date() == "" )
+		    				$date = "undefined";
+		    			else
+		    				$date = get_the_date();
+		    		?>
+		    		<li><a href="<?php echo wp_get_attachment_url( get_the_ID() ); ?>"><?php the_title(); ?></a> uploaded the <?php echo $date; ?> <input type="button" value="Delete" class="delete_attachment" attach_id="<?php the_ID(); ?>"></input></li>
+		    		<?php endwhile; ?>
+		    		<?php wp_reset_postdata(); ?>
+		    	</ul>
+		        <div style="clear:both;"></div>
+		    </div>
+		</div>
+		<?php endif; ?>	
+
 		<div id='message' class='updated'>File must contain at least <strong>2 columns: username and email</strong>. These should be the first two columns and it should be placed <strong>in this order: username and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
 		<div id='message-password' class='error'>Please, read carrefully how <strong>passwords are managed</strong>.</div>
 		<div style="float:left; width:80%;">
@@ -437,24 +470,64 @@ function acui_options()
 		<div style="width:775px;margin:0 auto"><img src="<?php echo plugins_url() . "/import-users-from-csv-with-meta/csv_example.png"; ?>"/></div>
 	</div>
 	<script type="text/javascript">
-	function check(){
-		if(document.getElementById("uploadfiles").value == "") {
-		   alert("Please choose a file");
-		   return false;
+	jQuery( document ).ready( function( $ ){
+		function check(){
+			if(document.getElementById("uploadfiles").value == "") {
+			   alert("Please choose a file");
+			   return false;
+			}
 		}
-	}
 
-	function showMe (box) {
-	    var chboxs = document.getElementsByName("sends_email");
-	    var vis = "none";
-	    for(var i=0;i<chboxs.length;i++) { 
-	        if(chboxs[i].checked){
-	         vis = "block";
-	            break;
-	        }
-	    }
-	    document.getElementById(box).style.display = vis;
-	}
+		function showMe (box) {
+		    var chboxs = document.getElementsByName("sends_email");
+		    var vis = "none";
+		    for(var i=0;i<chboxs.length;i++) { 
+		        if(chboxs[i].checked){
+		         vis = "block";
+		            break;
+		        }
+		    }
+		    document.getElementById(box).style.display = vis;
+		}
+
+		$( ".delete_attachment" ).click( function(){
+			var answer = confirm( "Are you sure to delete this file?" );
+			if( answer ){
+				var data = {
+					'action': 'acui_delete_attachment',
+					'attach_id': $( this ).attr( "attach_id" )
+				};
+
+				$.post(ajaxurl, data, function(response) {
+					if( response != 1 )
+						alert( "There were problems deleting the file, please check file permissions" );
+					else{
+						alert( "File successfully deleted" );
+						document.location.reload();
+					}
+				});
+			}
+		});
+
+		$( "#bulk_delete_attachment" ).click( function(){
+			var answer = confirm( "Are you sure to delete ALL CSV files uploaded? There can be CSV files from other plugins." );
+			if( answer ){
+				var data = {
+					'action': 'acui_bulk_delete_attachment',
+				};
+
+				$.post(ajaxurl, data, function(response) {
+					if( response != 1 )
+						alert( "There were problems deleting the files, please check files permissions" );
+					else{
+						alert( "Files successfully deleted" );
+						document.location.reload();
+					}
+				});
+			}
+		});
+
+	} );
 	</script>
 <?php
 	}
@@ -644,6 +717,37 @@ function acui_modify_user_edit_admin(){
  	}
 }
 
+function acui_delete_attachment() {
+	$attach_id = intval( $_POST['attach_id'] );
+
+	$result = wp_delete_attachment( $attach_id, true );
+
+	if( $result === false )
+		echo 0;
+	else
+		echo 1;
+
+	wp_die();
+}
+
+function acui_bulk_delete_attachment(){
+	$args_old_csv = array( 'post_type'=> 'attachment', 'post_mime_type' => 'text/csv', 'post_status' => 'inherit', 'posts_per_page' => -1 );
+	$old_csv_files = new WP_Query( $args_old_csv );
+	$result = 1;
+
+	while($old_csv_files->have_posts()) : 
+		$old_csv_files->the_post(); 
+
+		if( wp_delete_attachment( get_the_ID(), true ) === false )
+			$result = 0;
+	endwhile;
+	
+	wp_reset_postdata();
+
+	echo $result;
+
+	wp_die();
+}
 	
 register_activation_hook(__FILE__,'acui_init'); 
 register_deactivation_hook( __FILE__, 'acui_deactivate' );
@@ -654,6 +758,8 @@ add_action("show_user_profile", "acui_extra_user_profile_fields");
 add_action("edit_user_profile", "acui_extra_user_profile_fields");
 add_action("personal_options_update", "acui_save_extra_user_profile_fields");
 add_action("edit_user_profile_update", "acui_save_extra_user_profile_fields");
+add_action( 'wp_ajax_acui_delete_attachment', 'acui_delete_attachment' );
+add_action( 'wp_ajax_acui_bulk_delete_attachment', 'acui_bulk_delete_attachment' );
 
 // misc
 if (!function_exists('str_getcsv')) { 
