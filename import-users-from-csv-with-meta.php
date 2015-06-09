@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.9
+Version: 1.3.9.1
 Author URI: https://codection.com
 */
 
@@ -470,26 +470,26 @@ function acui_options()
 		<div style="width:775px;margin:0 auto"><img src="<?php echo plugins_url() . "/import-users-from-csv-with-meta/csv_example.png"; ?>"/></div>
 	</div>
 	<script type="text/javascript">
+	function check(){
+		if(document.getElementById("uploadfiles").value == "") {
+		   alert("Please choose a file");
+		   return false;
+		}
+	}
+
+	function showMe (box) {
+	    var chboxs = document.getElementsByName("sends_email");
+	    var vis = "none";
+	    for(var i=0;i<chboxs.length;i++) { 
+	        if(chboxs[i].checked){
+	         vis = "block";
+	            break;
+	        }
+	    }
+	    document.getElementById(box).style.display = vis;
+	}
+
 	jQuery( document ).ready( function( $ ){
-		function check(){
-			if(document.getElementById("uploadfiles").value == "") {
-			   alert("Please choose a file");
-			   return false;
-			}
-		}
-
-		function showMe (box) {
-		    var chboxs = document.getElementsByName("sends_email");
-		    var vis = "none";
-		    for(var i=0;i<chboxs.length;i++) { 
-		        if(chboxs[i].checked){
-		         vis = "block";
-		            break;
-		        }
-		    }
-		    document.getElementById(box).style.display = vis;
-		}
-
 		$( ".delete_attachment" ).click( function(){
 			var answer = confirm( "Are you sure to delete this file?" );
 			if( answer ){
