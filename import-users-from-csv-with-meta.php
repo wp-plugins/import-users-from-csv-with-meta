@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.9.1
+Version: 1.3.9.2
 Author URI: https://codection.com
 */
 
@@ -335,7 +335,8 @@ function acui_options()
 		<?php endif; ?>	
 
 		<div id='message' class='updated'>File must contain at least <strong>2 columns: username and email</strong>. These should be the first two columns and it should be placed <strong>in this order: username and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
-		<div id='message-password' class='error'>Please, read carrefully how <strong>passwords are managed</strong>.</div>
+		<div id='message-password' class='error'>Please, read carefully how <strong>passwords are managed</strong>.</div>
+
 		<div style="float:left; width:80%;">
 			<h2>Import users from CSV</h2>
 		</div>
@@ -369,7 +370,7 @@ function acui_options()
 				<tr class="form-field">
 					<th scope="row"><label for="user_login">Send mail</label></th>
 					<td>
-						<p>Do you wish to send a mail with credentials to news users? <input type="checkbox" name="sends_email" value = "yes" onclick="showMe('email_div')"></p>
+						<p>Do you wish to send a mail with credentials to new users? <input type="checkbox" name="sends_email" value = "yes" onclick="showMe('email_div')"></p>
 						<div id="email_div" style="display:none">
 						<p>Mail subject : <input name="mail_title" size="100" value="Welcome to <?php echo get_bloginfo("name"); ?>" id="title" autocomplete="off" type="text"></p>
 						<?php wp_editor("Welcome,<br/>Your data to login in this site is:<br/><ul><li>URL to login: **loginurl**</li><li>Username = **username**</li><li>Password = **password**</li></ul>", 'custom_message'); ?>
@@ -441,7 +442,7 @@ function acui_options()
 					<ol>
 						<li><strong>user_nicename</strong>: A string that contains a URL-friendly name for the user. The default is the user's username.</li>
 						<li><strong>user_url</strong>: A string containing the user's URL for the user's web site.	</li>
-						<li><strong>display_name</strong>: A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user).	</li>
+						<li><strong>display_name</strong>: A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you don't use and delete the default admin user).</li>
 						<li><strong>nickname</strong>: The user's nickname, defaults to the user's username.	</li>
 						<li><strong>first_name</strong>: The user's first name.</li>
 						<li><strong>last_name</strong>: The user's last name.</li>
