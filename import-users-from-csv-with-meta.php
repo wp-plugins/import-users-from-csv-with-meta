@@ -262,7 +262,7 @@ function acui_options()
 {
 	global $url_plugin;
 
-	if (!current_user_can('edit_users'))  
+	if (!current_user_can('create_users'))  
 	{
 		wp_die(__('You are not allowed to see this content.'));
 		$acui_action_url = admin_url('options-general.php?page=' . plugin_basename(__FILE__));
@@ -641,7 +641,7 @@ function acui_extra_user_profile_fields( $user ) {
 }
 
 function acui_save_extra_user_profile_fields( $user_id ){
-	if (!current_user_can('edit_user', $user_id)) { return false; }
+	if (!current_user_can('create_users', $user_id)) { return false; }
 
 	global $wp_users_fields;
 	global $wp_min_fields;
