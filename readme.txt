@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.2.2
-Stable tag: 1.3.9.3
+Stable tag: 1.3.9.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.3.9.4 =
+* 	Previous version does not appear as updated in repository, with this version we try to fix it
 
 = 1.3.9.3 =
 * 	In WordPress Network, admins can now use the plugin and not only superadmins. Thanks to @jephperro
