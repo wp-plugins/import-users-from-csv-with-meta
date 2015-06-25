@@ -4,7 +4,7 @@ Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
 Tested up to: 4.2.2
-Stable tag: 1.3.9.4
+Stable tag: 1.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,9 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.4 =
+* 	Thanks to Kristopher Hutchison we have add an option to choose what you want to do with empty cells: 1) delete the meta-data or 2) ignore it and do not update, previous to this version, the plugin update the value to empty string
 
 = 1.3.9.4 =
 * 	Previous version does not appear as updated in repository, with this version we try to fix it

@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.3.9.4
+Version: 1.4
 Author URI: https://codection.com
 */
 
@@ -74,6 +74,8 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 			global $wpdb;
 			$headers = array();
 			$role = $form_data["role"];
+			$empty_cell_action = $form_data["empty_cell_action"];
+			
 			global $wp_users_fields;
 			global $wp_min_fields;	
 	
@@ -182,12 +184,31 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 					if($columns > 2){
 						for( $i=2 ; $i<$columns; $i++ ):
 							if( !empty( $data ) ){
-								if(strtolower( $headers[$i] ) == "password")
+								if(strtolower( $headers[$i] ) == "password"){ // passwords -> continue
 									continue;
-								elseif(in_array($headers[$i], $wp_users_fields))
-									wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
-								else
-									update_user_meta( $user_id, $headers[$i], $data[$i] );
+								}
+								else{
+									if( in_array( $headers[$i], $wp_users_fields ) ){ // wp_user data
+										
+										if( empty( $data[ $i ] ) && $empty_cell_action == "leave" )
+											continue;
+										else
+											wp_update_user( array( 'ID' => $user_id, $headers[$i] => $data[$i] ) );
+										
+									}
+									else{ // wp_usermeta data
+										
+										if( empty( $data[ $i ] ) ){
+											if( $empty_cell_action == "delete" )
+												delete_post_meta( $user_id, $headers[$i] );
+											else
+												continue;	
+										}
+										else
+											update_user_meta( $user_id, $headers[$i], $data[$i] );
+
+									}
+								}
 							}
 						endfor;
 					}
@@ -201,7 +222,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 					flush();
 
 					// send mail
-					if( isset($form_data["sends_email"]) && $form_data["sends_email"] ):
+					if( isset( $form_data["sends_email"] ) && $form_data["sends_email"] ):
 						$body_mail = stripslashes($form_data["custom_message"]);
 						$subject = stripslashes($form_data["mail_title"]);
 						
@@ -268,7 +289,7 @@ function acui_options()
 		$acui_action_url = admin_url('options-general.php?page=' . plugin_basename(__FILE__));
 	}
 	else if( isset( $_POST['uploadfile'] ) ){
-		acui_fileupload_process($_POST);
+		acui_fileupload_process( $_POST );
 	}
 	else
 	{
@@ -364,8 +385,17 @@ function acui_options()
 					</td>
 				</tr>
 				<tr class="form-field form-required">
-					<th scope="row"><label for="user_login">CSV file <span class="description">(required)</span></label></th>
+					<th scope="row"><label>CSV file <span class="description">(required)</span></label></th>
 					<td><input type="file" name="uploadfiles[]" id="uploadfiles" size="35" class="uploadfiles" /></td>
+				</tr>
+				<tr class="form-field form-required">
+					<th scope="row"><label>What should do the plugin with empty cells?</label></th>
+					<td>
+						<select name="empty_cell_action">
+							<option value="delete">Delete the metadata</option>
+							<option value="leave">Leave the old value for this metadata</option>
+						</select>
+					</td>
 				</tr>
 				<tr class="form-field">
 					<th scope="row"><label for="user_login">Send mail</label></th>
@@ -542,13 +572,13 @@ function acui_options()
  *
  * @return none
  */
-function acui_fileupload_process($form_data) {
+function acui_fileupload_process( $form_data ) {
   $uploadfiles = $_FILES['uploadfiles'];
   $role = $form_data["role"]; 
+  
+  if ( is_array($uploadfiles) ) {
 
-  if (is_array($uploadfiles)) {
-
-	foreach ($uploadfiles['name'] as $key => $value) {
+	foreach ( $uploadfiles['name'] as $key => $value ) {
 
 	  // look only for uploded files
 	  if ($uploadfiles['error'][$key] == 0) {
