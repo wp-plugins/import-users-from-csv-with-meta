@@ -4,7 +4,7 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.4
+Version: 1.4.1
 Author URI: https://codection.com
 */
 
@@ -75,6 +75,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 			$headers = array();
 			$role = $form_data["role"];
 			$empty_cell_action = $form_data["empty_cell_action"];
+			$activate_users_wp_members = $form_data["activate_users_wp_members"];
 			
 			global $wp_users_fields;
 			global $wp_min_fields;	
@@ -180,6 +181,10 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 
 					if(!( in_array("administrator", acui_get_roles($user_id), FALSE) || is_multisite() && is_super_admin( $user_id ) ))
 						wp_update_user(array ('ID' => $user_id, 'role' => $role)) ;
+
+					// WP Members activation
+					if( $activate_users_wp_members == "activate" )
+						update_user_meta( $user_id, "active", true );
 						
 					if($columns > 2){
 						for( $i=2 ; $i<$columns; $i++ ):
@@ -394,6 +399,15 @@ function acui_options()
 						<select name="empty_cell_action">
 							<option value="delete">Delete the metadata</option>
 							<option value="leave">Leave the old value for this metadata</option>
+						</select>
+					</td>
+				</tr>
+				<tr class="form-field form-required">
+					<th scope="row"><label><strong>(Only for <a href="https://wordpress.org/plugins/wp-members/">WP Members</a> users)</strong> Activate user at the same time is being created</label></th>
+					<td>
+						<select name="activate_users_wp_members">
+							<option value="no_activate">Do not activate users</option>
+							<option value="activate">Activate users when they are being imported</option>
 						</select>
 					</td>
 				</tr>
