@@ -4,12 +4,12 @@ Plugin Name: Import users from CSV with meta
 Plugin URI: http://www.codection.com
 Description: This plugins allows to import users using CSV files to WP database automatically
 Author: codection
-Version: 1.4.2
+Version: 1.5
 Author URI: https://codection.com
 */
 
 $url_plugin = WP_PLUGIN_URL.'/'.str_replace(basename( __FILE__), "", plugin_basename(__FILE__));
-$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim", "user_registered", "Password");
+$wp_users_fields = array("user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim", "user_registered", "password");
 $wp_min_fields = array("Username", "Email");
 
 function acui_init(){
@@ -17,10 +17,24 @@ function acui_init(){
 }
 
 function acui_activate(){
+	$sitename = strtolower( $_SERVER['SERVER_NAME'] );
+	if ( substr( $sitename, 0, 4 ) == 'www.' ) {
+		$sitename = substr( $sitename, 4 );
+	}
+	
+	add_option( "acui_columns" );
+	add_option( "acui_mail_from", 'wordpress@' . $sitename, '', false );
+	add_option( "acui_mail_from_name", 'WordPress', '', false );
+	add_option( "acui_mail_subject", 'Welcome to ' . get_bloginfo("name"), '', false );
+	add_option( "acui_mail_body", 'Welcome,<br/>Your data to login in this site is:<br/><ul><li>URL to login: **loginurl**</li><li>Username = **username**</li><li>Password = **password**</li></ul>', '', false );
 }
 
 function acui_deactivate(){
-	delete_option("acui_columns");
+	delete_option( "acui_columns" );
+	delete_option( "acui_mail_from" );
+	delete_option( "acui_mail_from_name" );
+	delete_option( "acui_mail_subject" );
+	delete_option( "acui_mail_body" );
 }
 
 function acui_menu() {
@@ -73,6 +87,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 			set_time_limit(0);
 			global $wpdb;
 			$headers = array();
+			$headers_filtered = array();
 			$role = $form_data["role"];
 			$empty_cell_action = $form_data["empty_cell_action"];
 			$activate_users_wp_members = $form_data["activate_users_wp_members"];
@@ -83,6 +98,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 			echo "<h3>Ready to registers</h3>";
 			echo "<p>First row represents the form of sheet</p>";
 			$row = 0;
+			$positions = array();
 
 			ini_set('auto_detect_line_endings',TRUE);
 
@@ -96,7 +112,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 				if( count($data) == 1 )
 					$data = $data[0];
 				
-				foreach ($data as $key => $value)   {
+				foreach ($data as $key => $value){
 					$data[$key] = trim($value);
 				}
 
@@ -113,22 +129,29 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 
 					$i = 0;
 					$password_position = false;
+					
+					foreach ( $wp_users_fields as $wp_users_field ) {
+						$positions[ $wp_users_field ] = false;
+					}
+
 					foreach($data as $element){
 						$headers[] = $element;
 
-						if(strtolower($element) == "password")
-							$password_position = $i;
+						if( in_array( strtolower($element) , $wp_users_fields ) )
+							$positions[ strtolower($element) ] = $i;
 
 						$i++;
 					}
 
-					foreach($data as $element)
+					foreach($data as $element){
 						$headers[] = $element;
+
+						if( !in_array( strtolower( $element ), $wp_users_fields ) && !in_array( $element, $wp_min_fields ) )
+							$headers_filtered[] = $element;
+					}
 
 					$columns = count($data);
 
-					$headers_filtered = array_diff($headers, $wp_users_fields);
-					$headers_filtered = array_diff($headers_filtered, $wp_min_fields);
 					update_option("acui_columns", $headers_filtered);
 					?>
 					<h3>Inserting and updating data</h3>
@@ -146,6 +169,7 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 					$email = $data[1];
 					$user_id = 0;
 					$problematic_row = false;
+					$password_position = $positions["password"];
 
 					if($password_position === false)
 						$password = wp_generate_password();
@@ -234,16 +258,34 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 
 					// send mail
 					if( isset( $form_data["sends_email"] ) && $form_data["sends_email"] ):
-						$body_mail = stripslashes($form_data["custom_message"]);
-						$subject = stripslashes($form_data["mail_title"]);
+						update_option( "acui_mail_from_name", stripslashes( $form_data["from_name"] ) );
+						update_option( "acui_mail_from", stripslashes( $form_data["from_email"] ) );
+						update_option( "acui_mail_body", stripslashes( $form_data["body_mail"] ) );
+						update_option( "acui_mail_subject", stripslashes( $form_data["subject_mail"] ) );
 						
+						$body_mail = stripslashes($form_data["body_mail"] );
+						$subject = stripslashes( $form_data["subject_mail"] );
+												
 						$body_mail = str_replace("**loginurl**", "<a href='" . home_url() . "/wp-login.php" . "'>" . home_url() . "/wp-login.php" . "</a>", $body_mail);
 						$body_mail = str_replace("**username**", $username, $body_mail);
 						$body_mail = str_replace("**password**", $password, $body_mail);
 
+						foreach ( $wp_users_fields as $wp_users_field ) {								
+							if( $positions[ $wp_users_field ] != false && $wp_users_field != "password" ){
+								$body_mail = str_replace("**" . $wp_users_field .  "**", $data[ $positions[ $wp_users_field ] ] , $body_mail);							
+							}
+						}
+
+						add_filter( 'wp_mail_from', 'acui_mail_from' );
+						add_filter( 'wp_mail_from_name', 'acui_mail_from_name' );
 						add_filter( 'wp_mail_content_type', 'set_html_content_type' );
+						
 						wp_mail( $email, $subject, $body_mail );
+
+						remove_filter( 'wp_mail_from', 'acui_mail_from' );
+						remove_filter( 'wp_mail_from_name', 'acui_mail_from_name' );
 						remove_filter( 'wp_mail_content_type', 'set_html_content_type' );
+
 					endif;
 
 				endif;
@@ -263,6 +305,14 @@ function acui_import_users( $file, $form_data, $attach_id ){?>
 		?>
 	</div>
 <?php
+}
+
+function acui_mail_from(){
+	return get_option( "acui_mail_from" );
+}
+
+function acui_mail_from_name(){
+	return get_option( "acui_mail_from_name" );
 }
 
 function acui_get_roles($user_id){
@@ -290,6 +340,20 @@ function acui_get_editable_roles() {
     return $list_editable_roles;
 }
 
+function acui_check_options(){
+	if( get_option( "acui_mail_from" ) == "" )
+		update_option( "acui_mail_from", 'wordpress@' . $sitename );
+
+	if( get_option( "acui_mail_from_name" ) == "" )
+		update_option( "acui_mail_from_name", 'WordPress' );
+
+	if( get_option( "acui_mail_body" ) == "" )
+		update_option( "acui_mail_body", 'Welcome,<br/>Your data to login in this site is:<br/><ul><li>URL to login: **loginurl**</li><li>Username = **username**</li><li>Password = **password**</li></ul>' );
+
+	if( get_option( "acui_mail_subject" ) == "" )
+		update_option( "acui_mail_subject", 'Welcome to ' . get_bloginfo("name") );
+}
+
 function acui_options() 
 {
 	global $url_plugin;
@@ -307,6 +371,14 @@ function acui_options()
 		
 	$args_old_csv = array( 'post_type'=> 'attachment', 'post_mime_type' => 'text/csv', 'post_status' => 'inherit', 'posts_per_page' => -1 );
 	$old_csv_files = new WP_Query( $args_old_csv );
+
+	acui_check_options();
+
+	$from_email = get_option( "acui_mail_from" );
+	$from_name = get_option( "acui_mail_from_name" );
+	$body_mail = get_option( "acui_mail_body" );
+	$subject_mail = get_option( "acui_mail_subject" );
+
 ?>
 	<script>	
 	jQuery(document).ready(function($) {
@@ -367,7 +439,7 @@ function acui_options()
 		<?php endif; ?>	
 
 		<div id='message' class='updated'>File must contain at least <strong>2 columns: username and email</strong>. These should be the first two columns and it should be placed <strong>in this order: username and email</strong>. If there are more columns, this plugin will manage it automatically.</div>
-		<div id='message-password' class='error'>Please, read carefully how <strong>passwords are managed</strong>.</div>
+		<div id='message-password' class='error'>Please, read carefully how <strong>passwords are managed</strong> and also take note about capitalization, this plugin is <strong>case sensitive</strong>.</div>
 
 		<div style="float:left; width:80%;">
 			<h2>Import users from CSV</h2>
@@ -422,9 +494,12 @@ function acui_options()
 					<td>
 						<p>Do you wish to send a mail with credentials to new users? <input type="checkbox" name="sends_email" value = "yes" onclick="showMe('email_div')"></p>
 						<div id="email_div" style="display:none">
-						<p>Mail subject : <input name="mail_title" size="100" value="Welcome to <?php echo get_bloginfo("name"); ?>" id="title" autocomplete="off" type="text"></p>
-						<?php wp_editor("Welcome,<br/>Your data to login in this site is:<br/><ul><li>URL to login: **loginurl**</li><li>Username = **username**</li><li>Password = **password**</li></ul>", 'custom_message'); ?>
-						**username** = username to login - **password** = user password - **loginurl** = current site login url, for example www.site.com/wp-login.php
+						<p>From name: <input name="from_name" size="100" value="<?php echo $from_name; ?>" id="title" autocomplete="off" type="text"></p>
+						<p>From email : <input name="from_email" size="100" value="<?php echo $from_email; ?>" id="title" autocomplete="off" type="text"></p>
+						<p>Mail subject : <input name="subject_mail" size="100" value="<?php echo $subject_mail; ?>" id="title" autocomplete="off" type="text"></p>
+						<?php wp_editor( $body_mail , 'body_mail'); ?>
+						**username** = username to login - **password** = user password - **loginurl** = current site login url, for example www.site.com/wp-login.php<br/>
+						You can also use any WordPress user standard field, if you have used it in your CSV. For example, if you have a first_name column, you could use **first_name**
 						</div>
 					</td>
 				</tr>
@@ -471,6 +546,7 @@ function acui_options()
 					</ol>						
 					<small><em>(The next columns are totally customizable and you can use whatever you want. All rows must contains same columns)</em></small>
 					<small><em>(User profile will be adapted to the kind of data you have selected)</em></small>
+					<small><em>(If you want to disable the extra profile information, please deactivate this plugin after make the import)</em></small>
 				</td>
 			</tr>
 			<tr valign="top">
@@ -671,8 +747,8 @@ function acui_extra_user_profile_fields( $user ) {
 	$headers = get_option("acui_columns");
 	if( is_array($headers) && !empty($headers) ):
 ?>
-	<h3><?php _e("Extra profile information", "blank"); ?></h3>
-
+	<h3>Extra profile information</h3>
+	
 	<table class="form-table"><?php
 
 	foreach ($headers as $column):

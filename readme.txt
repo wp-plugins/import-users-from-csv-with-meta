@@ -3,8 +3,8 @@ Contributors: hornero, carazo
 Donate link: http://codection.com
 Tags: csv, import, importer, meta data, meta, user, users, user meta,  editor, profile, custom, fields, delimiter, update, insert
 Requires at least: 3.4
-Tested up to: 4.2.2
-Stable tag: 1.4.2
+Tested up to: 4.2.3
+Stable tag: 1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,12 @@ Plugin will automatically detect:
 
 
 == Changelog ==
+
+= 1.5 =
+* 	Thanks to Adam Hunkapiller ( of dreambridgepartners.com ) have supported all this new functionalities.
+*	You can choose the mail from and the from name of the mail sent.
+*	Mail from, from name, mail subject and mail body are now saved in the system and reused anytime you used the plugin in order to make the mail sent easier.
+*	You can include all this fields in the mail: "user_nicename", "user_url", "display_name", "nickname", "first_name", "last_name", "description", "jabber", "aim", "yim", "user_registered" if you used it in the CSV and you indicate it the mail body in this way **FIELD_NAME**, for example: **first_name**
 
 = 1.4.2 =
 * 	Due to some support threads, we have add a different background-color and color in rows that are problematic: the email was found in the system but the username is not the same
