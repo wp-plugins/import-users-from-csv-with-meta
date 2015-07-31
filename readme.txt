@@ -52,6 +52,9 @@ Plugin will automatically detect:
 
 == Changelog ==
 
+= 1.5.1 =
+* 	Thanks to Mitch ( mitch AT themilkmob DOT org ) for reporting the bug, now headers do not appears twice.
+
 = 1.5 =
 * 	Thanks to Adam Hunkapiller ( of dreambridgepartners.com ) have supported all this new functionalities.
 *	You can choose the mail from and the from name of the mail sent.
